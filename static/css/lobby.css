@@ -1,0 +1,9 @@
+body {
+	color: lightgray;
+	background-color: #101010;
+}
+
+button {
+	margin: 1em;
+	padding: 0.5em 1em;
+}

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Go</title>
+		<link rel="stylesheet" type="text/css" href="/static/css/lobby.css">
+	</head>
+	<body>
+		<h1>Simple Go</h1>
+		<form method="GET" action="/play/{{id}}/black">
+			<button>Black</button>
+		</form>
+		<form method="GET" action="/play/{{id}}/white">
+			<button>White</button>
+		</form>
+		<form method="GET" action="/play/{{id}}/spectate">
+			<button disabled>Spectate</button>
+		</form>
+	</body>
+</html>

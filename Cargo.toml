@@ -1,0 +1,18 @@
+[package]
+name = "go"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+axum = {version = "0.6", features = ["ws"]}
+hyper = {version = "0.14", features = ["full"]}
+tokio = {version = "1.29", features = ["full"]}
+tower = "0.4"
+serde = {version = "1.0", features = ["derive"]}
+futures = "0.3"
+http = "0.2"
+rand = "0.8"
+handlebars = {version = "4.3", features = ["dir_source"]}
+serde_json = "1"

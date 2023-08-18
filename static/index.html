@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Casual Go</title>
+		<link rel="stylesheet" type="text/css" href="css/index.css">
+	</head>
+	<body>
+		<h1>Casual Go</h1>
+		<h2>Create Game</h2>
+		<form action="/game" method="post">
+			<div>
+			<label for="board_size">Board size</label>
+			<select id="board_size" name="board_size">
+				<option value="5">5×5</option>
+				<option value="7">7×7</option>
+				<option value="9">9×9</option>
+				<option value="11">11×11</option>
+				<option value="13">13×13</option>
+				<option value="15">15×15</option>
+				<option value="17">17×17</option>
+				<option value="19">19×19</option>
+			</select>
+			</div>
+			<div>
+			<label for="handicap">Handicap stones</label>
+			<select id="handicap" name="handicap">
+				<option value="0">0</option>
+				<option value="1">1</option>
+				<option value="2">2</option>
+				<option value="3">3</option>
+				<option value="4">4</option>
+				<option value="5">5</option>
+				<option value="6">6</option>
+				<option value="7">7</option>
+				<option value="8">8</option>
+				<option value="9">9</option>
+			</select>
+			</div>
+			<div>
+			<label for="scoring">Scoring system</label>
+			<select id="scoring" name="scoring">
+				<option value="area">Area</option>
+				<option value="territory">Territory</option>
+				<option value="stones">Stones</option>
+			</select>
+			</div>
+			<button>Submit</button>
+		</form>
+	</body>
+</html>
