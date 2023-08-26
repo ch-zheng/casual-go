@@ -7,41 +7,43 @@
 		<link rel="stylesheet" type="text/css" href="/static/css/index.css">
 	</head>
 	<body>
-		<h1>Casual Go</h1>
-		<h2>Create Game</h2>
-		<form action="/create" method="post">
-			<div>
-				<label for="board_size">Board size</label>
-				<select id="board_size" name="board_size">
-					<option value="9">9</option>
-					<option value="13">13</option>
-					<option value="19">19</option>
-				</select>
-				<label for="komi">Komi</label>
-				<input id="komi" type="number" name="komi" min="0" max="10" value="7">
-				<label for="handicap">Handicap</label>
-				<input id="handicap" type="number" name="handicap" min="1" max="9" value="1">
-				<!--Time control-->
-				<label for="fixed_time">Fixed time</label>
-				<input id="fixed_time" type="number" name="fixed_time" min="10" max="3600" value="600">
-				<label for="added_time">Added time</label>
-				<input id="added_time" type="number" name="added_time" min="0" max="60" value="10">
-				<!--Players-->
-				<input type="hidden" name="black_player" value="human">
-				<!--
-				<label for="black_player">Black player</label>
-				<select id="black_player" name="black_player">
-					<option value="human">Human</option>
-					<option value="bot">Computer</option>
-				</select>
-				-->
-				<label for="white_player">White player</label>
-				<select id="white_player" name="white_player">
-					<option value="human">Human</option>
-					<option value="bot">Computer</option>
-				</select>
-			</div>
-			<button>Create</button>
-		</form>
+		<main>
+			<h1>Casual Go</h1>
+			<h2>Create Game</h2>
+			<form action="/create" method="post">
+				<div>
+					<label for="board_size">Board size</label>
+					<select id="board_size" name="board_size">
+						<option value="9">9</option>
+						<option value="13">13</option>
+						<option value="19">19</option>
+					</select>
+					<label for="komi">Komi</label>
+					<input id="komi" type="number" name="komi" min="0" max="10" value="7">
+					<label for="handicap">Handicap</label>
+					<input id="handicap" type="number" name="handicap" min="1" max="9" value="1">
+					<!--Time control-->
+					<label for="fixed_time">Fixed time</label>
+					<input id="fixed_time" type="number" name="fixed_time" min="10" max="3600" value="600">
+					<label for="added_time">Added time</label>
+					<input id="added_time" type="number" name="added_time" min="0" max="60" value="10">
+					<!--Players-->
+					<input type="hidden" name="black_player" value="human">
+					<!--
+					<label for="black_player">Black player</label>
+					<select id="black_player" name="black_player">
+						<option value="human">Human</option>
+						<option value="bot">Computer</option>
+					</select>
+					-->
+					<label for="white_player">White player</label>
+					<select id="white_player" name="white_player">
+						<option value="human">Human</option>
+						<option value="bot">Computer</option>
+					</select>
+				</div>
+				<button>Create</button>
+			</form>
+		</main>
 	</body>
 </html>

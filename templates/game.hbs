@@ -17,7 +17,10 @@
 	</head>
 	<body>
 		<main>
-			<h1><a href="/">Casual Go</a></h1>
+			<header>
+				<h1><a href="/">Casual Go</a></h1>
+				<input type="text" readonly onClick="this.select();" value="go.67729072.xyz/play/{{id}}">
+			</header>
 			<h2 id="status">Connecting...</h2>
 			<div id="timers">
 				<div class="timer">
@@ -29,7 +32,9 @@
 					<span id="white-timer" is="go-timer"></span>
 				</div>
 			</div>
-			<canvas id="board" is="go-board" data-tileset="/static/images/tileset.png">Board</canvas>
+			<div id="board-frame">
+				<canvas id="board" is="go-board" data-tileset="/static/images/tileset.png">Board</canvas>
+			</div>
 			<div id="handicap-buttons" class="buttons">
 				<button type="button" disabled>Play</button>
 				<button type="button" disabled>Reset</button>

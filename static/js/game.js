@@ -40,6 +40,7 @@ const score = document.getElementById('score');
 const blackScore = document.getElementById('black-score');
 const whiteScore = document.getElementById('white-score');
 const scoreStatement = document.getElementById('score-statement');
+score.style.display = 'none';
 
 //Data
 const socket = new WebSocket(`ws://${url.host}/ws/${id}/${stoneName}`);
