@@ -1,4 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&display=swap');
+
 body {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	font-family: 'IBM Plex', sans-serif;
 	color: lightgray;
 	background-color: #101010;
+}
+
+form {
+	max-width: 12cm;
+	padding: 1em;
+}
+
+form div {
+	display: grid;
+	row-gap: 0.5ch;
+	grid-template-columns: 1fr 1fr;
+}
+
+form button {
+	width: 50%;
+	margin-top: 1ch;
 }

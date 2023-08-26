@@ -1,20 +1,62 @@
 <!DOCTYPE html>
 <html>
 	<head>
+		<title>Casual Go</title>
+		<link rel="stylesheet" type="text/css" href="/static/css/game.css">
+		<link rel="icon" href="/static/images/go.ico">
+		<script type="module" src="/static/js/lobby.js"></script>
 		<meta charset="utf-8">
-		<title>Go</title>
-		<link rel="stylesheet" type="text/css" href="/static/css/lobby.css">
+		<!--Go game settings-->
+		<meta name="go:id" content="{{id}}">
+		<meta name="go:board-size" content="{{board_size}}">
+		<meta name="go:komi" content="{{komi}}">
+		<meta name="go:handicap" content="{{handicap}}">
+		<meta name="go:fixed-time" content="{{fixed_time}}">
+		<meta name="go:added-time" content="{{added_time}}">
 	</head>
 	<body>
-		<h1>Simple Go</h1>
-		<form method="GET" action="/play/{{id}}/black">
-			<button>Black</button>
-		</form>
-		<form method="GET" action="/play/{{id}}/white">
-			<button>White</button>
-		</form>
-		<form method="GET" action="/play/{{id}}/spectate">
-			<button disabled>Spectate</button>
-		</form>
+		<main>
+			<h1><a href="/">Casual Go</a></h1>
+			<h2 id="status">Connecting...</h2>
+			<div id="timers">
+				<div class="timer">
+					<span>Black</span>
+					<span id="black-timer" is="go-timer"></span>
+				</div>
+				<div class="timer">
+					<span>White</span>
+					<span id="white-timer" is="go-timer"></span>
+				</div>
+			</div>
+			<canvas id="board" is="go-board" data-tileset="/static/images/tileset.png">Board</canvas>
+			<div id="join-buttons" class="buttons">
+				<form method="GET" action="/play/{{id}}/black">
+					<button>Black</button>
+				</form>
+				<form method="GET" action="/play/{{id}}/white">
+					<button disabled>White</button>
+				</form>
+			</div>
+			<div id="score">
+				<table>
+					<thead><tr><th colspan="2">Score</th></tr></thead>
+					<tbody>
+						<tr><td>Black</td><td id="black-score">0</td></tr>
+						<tr><td>White</td><td id="white-score">0</td></tr>
+					</tbody>
+				</table>
+				<span id="score-statement"></span>
+			</div>
+			<table>
+				<thead><tr><th colspan="2">Settings</th></tr></thead>
+				<tbody>
+					<tr><td>Board size</td><td>{{board_size}}</td></tr>
+					<tr><td>Komi</td><td>{{komi}}</td></tr>
+					<tr><td>Handicap</td><td>{{handicap}}</td></tr>
+					<tr><td>Fixed time</td><td>{{fixed_time}}</td></tr>
+					<tr><td>Added time</td><td>{{added_time}}</td></tr>
+				</tbody>
+			</table>
+		</main>
 	</body>
 </html>

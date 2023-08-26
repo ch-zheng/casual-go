@@ -3,6 +3,7 @@
 	<head>
 		<meta charset="utf-8">
 		<title>Casual Go</title>
+		<link rel="icon" href="/static/images/go.ico">
 		<link rel="stylesheet" type="text/css" href="/static/css/index.css">
 	</head>
 	<body>
@@ -10,41 +11,37 @@
 		<h2>Create Game</h2>
 		<form action="/create" method="post">
 			<div>
-			<label for="board_size">Board size</label>
-			<select id="board_size" name="board_size">
-				<option value="5">5×5</option>
-				<option value="7">7×7</option>
-				<option value="9">9×9</option>
-				<option value="11">11×11</option>
-				<option value="13">13×13</option>
-				<option value="15">15×15</option>
-				<option value="17">17×17</option>
-				<option value="19">19×19</option>
-			</select>
+				<label for="board_size">Board size</label>
+				<select id="board_size" name="board_size">
+					<option value="9">9</option>
+					<option value="13">13</option>
+					<option value="19">19</option>
+				</select>
+				<label for="komi">Komi</label>
+				<input id="komi" type="number" name="komi" min="0" max="10" value="7">
+				<label for="handicap">Handicap</label>
+				<input id="handicap" type="number" name="handicap" min="1" max="9" value="1">
+				<!--Time control-->
+				<label for="fixed_time">Fixed time</label>
+				<input id="fixed_time" type="number" name="fixed_time" min="10" max="3600" value="600">
+				<label for="added_time">Added time</label>
+				<input id="added_time" type="number" name="added_time" min="0" max="60" value="10">
+				<!--Players-->
+				<input type="hidden" name="black_player" value="human">
+				<!--
+				<label for="black_player">Black player</label>
+				<select id="black_player" name="black_player">
+					<option value="human">Human</option>
+					<option value="bot">Computer</option>
+				</select>
+				-->
+				<label for="white_player">White player</label>
+				<select id="white_player" name="white_player">
+					<option value="human">Human</option>
+					<option value="bot">Computer</option>
+				</select>
 			</div>
-			<div>
-			<label for="handicap">Handicap stones</label>
-			<select id="handicap" name="handicap">
-				<option value="0">0</option>
-				<option value="1">1</option>
-				<option value="2">2</option>
-				<option value="3">3</option>
-				<option value="4">4</option>
-				<option value="5">5</option>
-				<option value="6">6</option>
-				<option value="7">7</option>
-				<option value="8">8</option>
-			</select>
-			</div>
-			<div>
-			<label for="scoring">Scoring system</label>
-			<select id="scoring" name="scoring">
-				<option value="area">Area</option>
-				<option value="territory">Territory</option>
-				<option value="stones">Stones</option>
-			</select>
-			</div>
-			<button>Submit</button>
+			<button>Create</button>
 		</form>
 	</body>
 </html>

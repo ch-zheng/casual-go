@@ -1,61 +1,102 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;700&display=swap');
 
 body {
-	background-color: #101010;
-}
-
-h1 {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	font-family: 'IBM Plex', sans-serif;
 	color: white;
-	align-self: flex-start;
-	font-family: 'IBM Plex Sans', sans-serif;
+	background-color: #101010;
 }
 
 main {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	position: absolute;
-	left: 50%;
-	transform: translate(-50%);
+	gap: 1em;
 }
 
-main > * {
-	margin-bottom: 1em;
+a {
+	text-decoration: none;
 }
 
+a:visited {
+	color: inherit;
+}
+
+h1, h2 {
+	width: 100%;
+	margin: 0;
+}
+
+/* Board */
 canvas {
 	image-rendering: crisp-edges;
 	cursor: crosshair;
 }
 
-button {
-	margin: 0 0.5em;
-	padding: 0.2em 1cm;
-	font: bold 1em 'IBM Plex Sans', sans-serif;
-	cursor: pointer;
-}
-
 #board {
 	width: 16cm;
 	height: 16cm;
-	background-color: darkslategray;
+	max-width: 100%;
+	aspect-ratio: 1;
+	background-color: #A38D75;
 }
 
-#status {
-	padding: 0 1cm;
-	border: medium solid white;
-	border-radius: 1cm;
-	overflow: clip;
-	color: black;
-	background-color: white;
-	text-align: center;
+/* Timers */
+#timers {
+	display: flex;
+	justify-content: space-evenly;
+	width: 100%;
 }
 
-#status h2 {
-	margin: 0;
-	font: bold 1em 'IBM Plex Sans', sans-serif;
+.timer {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 0.5em 2em;
+	border-radius: 0.2em;
+	background-color: #202020;
 }
 
-#tileset {
-	display: none;
+.timer span:first-child {
+	color: #808080;
+}
+
+.timer span:last-child {
+	font-family: 'IBM Plex Mono', monospace;
+	font-size: 2em;
+}
+
+/* Buttons */
+.buttons {
+	display: flex;
+	justify-content: space-evenly;
+	width: 100%;
+	gap: 1em;
+}
+
+form {
+	width: 100%;
+}
+
+button {
+	width: 100%;
+	font-size: 1em;
+	font-weight: bold;
+}
+
+/* Settings */
+table {
+	width: fit-content;
+	border: none;
+}
+
+td {
+	padding: 0 1em;
+}
+
+td:last-child {
+	font-family: 'IBM Plex Mono', monospace;
+	text-align: end;
 }

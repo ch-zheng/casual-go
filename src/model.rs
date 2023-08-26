@@ -3,12 +3,32 @@ use std::{
     error,
     collections::HashSet
 };
+use serde::{Serialize, Deserialize};
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Settings {
+    pub board_size: u32,
+    pub komi: u32,
+    pub handicap: u32,
+    pub fixed_time: u32,
+    pub added_time: u32
+}
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Stone {
     Black,
     White,
     Empty
+}
+
+impl From<Stone> for &str {
+    fn from(value: Stone) -> Self {
+        match value {
+            Stone::Black => "black",
+            Stone::White => "white",
+            Stone::Empty => "empty"
+        }
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -19,11 +39,15 @@ pub enum Turn {
     End
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
-pub enum Scoring {
-    Area,
-    Territory,
-    Stones
+impl From<Turn> for &str {
+    fn from(value: Turn) -> Self {
+        match value {
+            Turn::Handicap => "handicap",
+            Turn::Black => "black",
+            Turn::White => "white",
+            Turn::End => "end"
+        }
+    }
 }
 
 fn neighbors(n: usize, board: &[Stone], pos: usize) -> Vec<usize> {
@@ -48,12 +72,13 @@ fn connected_group(n: usize, board: &[Stone], pos: usize) -> Vec<usize> {
     let mut result = Vec::<usize>::new();
     let color = board[pos];
     let mut seen = vec![false; board.len()];
+    seen[pos] = true;
     let mut stack = vec![pos];
     while let Some(pos) = stack.pop() {
-        seen[pos] = true;
         result.push(pos);
         for neighbor in neighbors(n, board, pos) {
             if board[neighbor] == color && !seen[neighbor] {
+                seen[neighbor] = true;
                 stack.push(neighbor);
             }
         }
@@ -133,8 +158,8 @@ impl error::Error for GameError {}
 pub struct Game {
     //Settings
     pub board_size: usize,
+    pub komi: u32,
     pub handicap: u32,
-    pub scoring: Scoring,
     //Game state
     pub board: Vec<Stone>,
     pub history: Vec<Vec<Stone>>,
@@ -148,43 +173,47 @@ pub struct Game {
 
 //TODO: Fixed handicap placement
 impl Game {
-    pub fn new(board_size: usize, handicap: u32, scoring: Scoring) -> Game {
-        let tile_count = board_size * board_size;
-        assert!(handicap > 0);
-        assert!(handicap <= 9);
-        let board = vec![Stone::Empty; tile_count];
-        Game {
-            board_size,
-            handicap,
-            scoring,
-            board: board.clone(),
-            history: vec![board.clone()],
-            valid_moves: vec![true; tile_count],
-            turn: if handicap == 1 {
-                Turn::Black
-            } else {
-                Turn::Handicap
-            },
-            passes: 0,
-            black_score: 0,
-            white_score: 0
+    pub fn new(board_size: usize, komi: u32, handicap: u32) -> Result<Game, GameError> {
+        if board_size >= 5 && board_size <= 19 && handicap > 0 && handicap <= 9 {
+            let tile_count = board_size * board_size;
+            let board = vec![Stone::Empty; tile_count];
+            Ok(Game {
+                board_size,
+                komi,
+                handicap,
+                board: board.clone(),
+                history: vec![board.clone()],
+                valid_moves: vec![true; tile_count],
+                turn: if handicap == 1 {
+                    Turn::Black
+                } else {
+                    Turn::Handicap
+                },
+                passes: 0,
+                black_score: 0,
+                white_score: 0
+            })
+        } else {
+            Err(GameError::Handicap)
         }
     }
-    pub fn play_handicap(&mut self, pos: &[usize]) -> Result<(), GameError> {
-        if self.turn != Turn::Handicap {
-            return Err(GameError::Handicap);
+    pub fn play_handicap(&mut self, stone: Stone, positions: &[usize]) -> Result<(), GameError> {
+        if stone == Stone::Black && self.turn == Turn::Handicap {
+            let set: HashSet<usize> = positions.iter().copied()
+                .filter(|&x| x < self.board.len())
+                .collect();
+            if set.len() == positions.len() && positions.len() <= self.handicap as usize {
+                for &i in positions {
+                    self.board[i] = stone;
+                }
+                self.turn = Turn::White;
+                Ok(())
+            } else {
+                Err(GameError::Handicap)
+            }
+        } else {
+            Err(GameError::Handicap)
         }
-        let set: HashSet<usize> = pos.iter().copied()
-            .filter(|&x| x < self.board_size)
-            .collect();
-        if set.len() != self.handicap as usize {
-            return Err(GameError::Handicap);
-        }
-        for i in set {
-            self.board[i] = Stone::Black;
-        }
-        self.turn = Turn::White;
-        Ok(())
     }
     pub fn play(&mut self, stone: Stone, pos: usize) -> Result<(), GameError> {
         //Conditions
@@ -202,6 +231,7 @@ impl Game {
                 Turn::White => Turn::Black,
                 _ => return Err(GameError::Play)
             };
+            self.passes = 0;
             //Generate next valid moves
             let next_stone = match stone {
                 Stone::Black => Stone::White,
@@ -232,15 +262,22 @@ impl Game {
         }
     }
     pub fn pass(&mut self, side: Stone) -> Result<(), GameError> {
-        if !(side == Stone::Black && self.turn == Turn::Black)
-            && !(side == Stone::White && self.turn == Turn::White) {
-            return Err(GameError::Play);
+        if (side == Stone::Black && self.turn == Turn::Black)
+            || (side == Stone::White && self.turn == Turn::White) {
+            self.passes += 1;
+            if self.passes == 2 {
+                self.turn = Turn::End;
+            } else {
+                match side {
+                    Stone::Black => self.turn = Turn::White,
+                    Stone::White => self.turn = Turn::Black,
+                    _ => ()
+                }
+            }
+            Ok(())
+        } else {
+            Err(GameError::Play)
         }
-        self.passes += 1;
-        if self.passes == 2 {
-            self.turn = Turn::End;
-        }
-        Ok(())
     }
     pub fn resign(&mut self, stone: Stone) -> Result<(), GameError> {
         if stone == Stone::Black && self.turn == Turn::Black {
@@ -262,7 +299,7 @@ impl Game {
         let mut territory = [0, 0];
         let mut seen = vec![false; self.board.len()];
         for pos in 0..self.board.len() {
-            if !seen[pos] {
+            if self.board[pos] == Stone::Empty && !seen[pos] {
                 let group = connected_group(self.board_size, &self.board, pos);
                 let mut bordered = [false, false];
                 for &pos in &group {
@@ -291,14 +328,7 @@ impl Game {
                 _ => ()
             }
         }
-        match self.scoring {
-            Scoring::Area => [
-                territory[0] + counts[0],
-                territory[1] + counts[1],
-            ],
-            Scoring::Territory => territory,
-            Scoring::Stones => counts
-        }
+        [territory[0] + counts[0], territory[1] + counts[1]]
     }
 }
 
@@ -312,7 +342,7 @@ mod tests {
             Stone::Black, Stone::Black, Stone::Empty,
             Stone::Empty, Stone::White, Stone::Black
         ];
-        let expected: [usize; 2] = [1, 3];
+        let expected = [1, 3, 5, 7];
         let mut neighbors = neighbors(3, &board, 4);
         neighbors.sort();
         assert!(neighbors == expected);
@@ -325,10 +355,23 @@ mod tests {
             Stone::Empty, Stone::White, Stone::Black
         ];
         let expected: [usize; 4] = [0, 1, 3, 4];
-        let mut neighbors = neighbors(3, &board, 0);
-        neighbors.sort();
-        assert!(neighbors == expected);
+        let mut group = connected_group(3, &board, 0);
+        group.sort();
+        for item in &group {
+            println!("GROUP {}", item);
+        }
+        assert!(group == expected);
     }
-    //TODO: Test liberty
-    //TODO: Test place_stone
+    #[test]
+    fn test_scoring() {
+        let mut game = Game::new(5, 0, 1).unwrap();
+        game.board_size = 3;
+        game.board = vec![
+            Stone::Empty, Stone::Empty, Stone::Black,
+            Stone::Black, Stone::Black, Stone::Empty,
+            Stone::Black, Stone::White, Stone::Empty
+        ];
+        let expected = [6, 1];
+        assert_eq!(game.score(), expected);
+    }
 }

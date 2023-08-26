@@ -4,33 +4,79 @@ class Cursor {
 	constructor(stone) {
 		this.stone = stone;
 		this.enabled = false;
-		this.position = [0, 0];
+		this.x = 0;
+		this.y = 0;
 	}
 }
 
-export class Board {
-	constructor(canvas, tileset, stone) {
-		//HTML elements
-		this.canvas = canvas;
-		this.ctx = canvas.getContext('2d');
-		this.tileset = tileset;
-		//Board
+/*
+	Stones:
+	0. Empty
+	1. Black
+	2. White
+*/
+
+export class Board extends HTMLCanvasElement {
+	constructor() {
+		super();
+		this.ctx = this.getContext('2d');
 		this.size = 0;
 		this.stones = new Uint8Array(this.size * this.size);
 		this.moves = new Uint8Array(this.size * this.size);
-		//Cursor
-		this.cursor = new Cursor(stone);
+		this.cursor = new Cursor(0);
+		this.clickListeners = new Set();
 	}
-	resize(size) {
+	connectedCallback() {
+		fetch(this.getAttribute('data-tileset'))
+			.then(response => response.blob())
+			.then(blob => createImageBitmap(blob))
+			.then(image => this.tileset = image)
+			.then(() => this.draw());
+	}
+	set board_size(size) {
 		this.size = size;
-		this.stones = new Uint8Array(this.size * this.size);
-		this.moves = new Uint8Array(this.size * this.size);
+		this.stones = new Uint8Array(size * size);
+		this.moves = new Uint8Array(size * size);
 		//Canvas
-		this.canvas.width = 16 * size;
-		this.canvas.height = 16 * size;
-		this.ctx = this.canvas.getContext('2d');
+		this.width = 16 * size;
+		this.height = 16 * size;
+		this.ctx = this.getContext('2d');
 		this.ctx.imageSmoothingEnabled = false;
 	}
+	//Enable stone placement
+	set enabled(enabled) {
+		if (enabled) {
+			this.addEventListener('mousemove', this.mousemoveListener);
+			this.addEventListener('mouseout', this.mouseoutListener);
+			this.addEventListener('click', this.clickListener);
+		} else {
+			this.cursor.enabled = false;
+			this.removeEventListener('mousemove', this.mousemoveListener);
+			this.removeEventListener('mouseout', this.mouseoutListener);
+			this.removeEventListener('click', this.clickListener);
+		}
+	}
+	//Event listeners
+	clickListener(event) {
+		if (event.button === 0) {
+			const x = Math.floor(this.size * event.offsetX / this.clientWidth);
+			const y = Math.floor(this.size * event.offsetY / this.clientHeight);
+			for (const entry of this.clickListeners)
+				entry(x, y);
+			this.draw();
+		}
+	}
+	mousemoveListener(event) {
+		this.cursor.enabled = true;
+		this.cursor.x = Math.floor(this.size * event.offsetX / this.clientWidth);
+		this.cursor.y = Math.floor(this.size * event.offsetY / this.clientHeight);
+		this.draw();
+	}
+	mouseoutListener(event) {
+		this.cursor.enabled = false;
+		this.draw();
+	}
+	//Methods
 	drawBoard() {
 		//Draw board
 		this.ctx.translate(0.5, 0.5);
@@ -80,45 +126,39 @@ export class Board {
 		}
 	}
 	drawCursor() {
-		if (this.cursor.enabled) {
-			const x = this.cursor.position[0];
-			const y = this.cursor.position[1];
-			const index = this.size * y + x;
-			const stone = this.stones[index];
-			const legal = this.moves[index];
-			if (stone === 0 && legal) {
-				this.ctx.globalAlpha = 0.5;
-				const tileOffset = this.cursor.stone === 'black' ? 0 : 8;
-				this.ctx.drawImage(
-					this.tileset,
-					tileOffset, 0,
-					8, 8,
-					16 * x, 16 * y,
-					16, 16
-				);
-				this.ctx.globalAlpha = 1;
+		const index = this.size * this.cursor.y + this.cursor.x;
+		const stone = this.stones[index];
+		const legal = this.moves[index];
+		if (stone === 0 && legal) {
+			this.ctx.globalAlpha = 0.5;
+			let tileOffset = 16;
+			switch (this.cursor.stone) {
+				case 1:
+					tileOffset = 0;
+					break;
+				case 2:
+					tileOffset = 8;
+					break;
 			}
+			this.ctx.drawImage(
+				this.tileset,
+				tileOffset, 0,
+				8, 8,
+				16 * this.cursor.x, 16 * this.cursor.y,
+				16, 16
+			);
+			this.ctx.globalAlpha = 1;
 		}
 	}
 	draw() {
-		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-		this.drawBoard();
-		this.drawStones();
-		this.drawCursor();
-	}
-	place(x, y, stone) {
-		switch (stone) {
-			case 'black':
-				stone = 1;
-				break;
-			case 'white':
-				stone = 2;
-				break;
+		if (this.tileset) {
+			this.ctx.clearRect(0, 0, this.width, this.height);
+			this.drawBoard();
+			this.drawStones();
+			if (this.cursor.enabled) this.drawCursor();
 		}
-		this.stones[this.size * y + x] = stone;
 	}
 	update(frame) {
-		this.resize(frame.board_size);
 		this.stones = new Uint8Array(frame.board);
 		this.moves = new Uint8Array(frame.moves);
 	}

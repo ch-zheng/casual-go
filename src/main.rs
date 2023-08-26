@@ -37,6 +37,7 @@ async fn main() {
         .route("/play/:game", routing::get(handlers::get_session))
         .route("/play/:game/:side", routing::get(handlers::join_session))
         .route("/ws/:game/:side", routing::get(handlers::connection))
+        .route("/sse/:game", routing::get(handlers::spectate))
         .with_state(state);
     let socket = SocketAddr::new(
         IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1)),

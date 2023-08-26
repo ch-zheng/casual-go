@@ -1,93 +1,97 @@
 'use strict';
 import {Board} from './board.js';
+import {Timer} from './timer.js';
+
+//Web components
+window.customElements.define('go-board', Board, {extends: 'canvas'});
+window.customElements.define('go-timer', Timer, {extends: 'span'});
+
+//Metadata
 const url = new URL(document.URL);
-const parts = url.pathname.split('/', 4);
-const game = parts[2];
-const stone = parts[3];
-console.log(parts, game, stone);
+const id = document.querySelector('meta[name="go:id"]').content;
+const stoneName = document.querySelector('meta[name="go:stone"]').content;
+const boardSize = parseInt(document.querySelector('meta[name="go:board-size"]').content, 10);
+const handicap = parseInt(document.querySelector('meta[name="go:handicap"]').content, 10);
+let stone;
+switch (stoneName) {
+	case 'black':
+		stone = 1;
+		break;
+	case 'white':
+		stone = 2;
+		break;
+}
+
 //UI elements
-const canvas = document.getElementById('board');
-const tileset = document.getElementById('tileset');
-const board = new Board(canvas, tileset, stone);
-const statusBar = document.getElementById('status').children[0];
+const statusText = document.getElementById('status');
+//Board
+const board = document.getElementById('board');
+board.board_size = boardSize;
+board.cursor.stone = stone;
+board.draw();
+//Buttons
 const handicapButtons = document.getElementById('handicap-buttons');
-handicapButtons.style.display = 'none';
 const playButtons = document.getElementById('play-buttons');
-playButtons.style.display = 'none';
+//Timers
+const blackTimer = document.getElementById('black-timer');
+const whiteTimer = document.getElementById('white-timer');
+//Scoring
+const score = document.getElementById('score');
+const blackScore = document.getElementById('black-score');
+const whiteScore = document.getElementById('white-score');
+const scoreStatement = document.getElementById('score-statement');
+
 //Data
-const socket = new WebSocket(`ws://${url.host}/ws/${game}/${stone}`);
-let handicapCount = 0;
+const socket = new WebSocket(`ws://${url.host}/ws/${id}/${stoneName}`);
 let handicaps = [];
 
-// ---- Board listeners ----
-function boardMousemoveListener(event) {
-	const x = Math.floor(board.size * event.offsetX / canvas.clientWidth);
-	const y = Math.floor(board.size * event.offsetY / canvas.clientHeight);
-	board.cursor.enabled = true;
-	board.cursor.position = [x, y];
-	board.draw();
+function suspend() {
+	board.enabled = false;
+	board.clickListeners.clear();
+	for (const button of handicapButtons.children)
+		button.setAttribute('disabled', '');
+	for (const button of playButtons.children)
+		button.setAttribute('disabled', '');
+	blackTimer.pause();
+	whiteTimer.pause();
 }
 
-function boardMouseoutListener(event) {
-	board.cursor.enabled = false;
-	board.draw();
-}
-
-function boardHandicapClickListener(event) {
-	if (event.button === 0) {
-		const x = Math.floor(board.size * event.offsetX / canvas.clientWidth);
-		const y = Math.floor(board.size * event.offsetY / canvas.clientHeight);
-		const index = board.size * y + x;
-		if (board.moves[index] && handicaps.length < handicapCount) {
-			handicaps.push(index);
-			board.place(x, y, stone);
-			handicapButtons.children[1].removeAttribute('disabled');
-			if (handicaps.length == handicapCount)
-				handicapButtons.children[0].removeAttribute('disabled');
-		}
-		board.draw();
+function handicapPlacement(x, y) {
+	const index = board.size * y + x;
+	if (board.moves[index] && handicaps.length < handicap) {
+		handicaps.push(index);
+		board.stones[index] = stone;
+		//Button state
+		handicapButtons.children[1].removeAttribute('disabled');
+		if (handicaps.length == handicap)
+			handicapButtons.children[0].removeAttribute('disabled');
 	}
 }
 
-function boardPlayClickListener(event) {
-	if (event.button === 0) {
-		const x = Math.floor(board.size * event.offsetX / canvas.clientWidth);
-		const y = Math.floor(board.size * event.offsetY / canvas.clientHeight);
-		const index = board.size * y + x;
-		if (board.moves[index]) {
-			//Play stone
-			board.place(x, y, stone);
-			socket.send(JSON.stringify({
-				action: 'play',
-				position: index
-			}));
-			board.draw();
-			//Transition
-			board.canvas.removeEventListener('mousemove', boardMousemoveListener);
-			board.canvas.removeEventListener('mouseout', boardMouseoutListener);
-			board.canvas.removeEventListener('click', boardPlayClickListener);
-			playButtons.style.display = 'none';
-		}
+function playPlacement(x, y) {
+	const index = board.size * y + x;
+	if (board.moves[index]) {
+		//Play stone
+		board[index] = stone;
+		socket.send(JSON.stringify({
+			action: 'play',
+			position: index
+		}));
 		board.draw();
+		suspend();
 	}
 }
 
-// ---- Handicap buttons ----
-//Play button
+//Handicap play button
 handicapButtons.children[0].addEventListener('click', event => {
-	//Play move
 	socket.send(JSON.stringify({
 		action: 'handicap',
 		positions: handicaps
 	}));
-	//Transition
-	board.canvas.removeEventListener('mousemove', boardMousemoveListener);
-	board.canvas.removeEventListener('mouseout', boardMouseoutListener);
-	board.canvas.removeEventListener('click', boardHandicapClickListener);
-	handicapButtons.style.display = 'none';
+	suspend();
 });
 
-//Reset button
+//Handicap reset button
 handicapButtons.children[1].addEventListener('click', event => {
 	handicapButtons.children[0].setAttribute('disabled', '');
 	handicapButtons.children[1].setAttribute('disabled', '');
@@ -97,100 +101,70 @@ handicapButtons.children[1].addEventListener('click', event => {
 	board.draw();
 });
 
-// ---- Play buttons ----
 //Pass button
 playButtons.children[0].addEventListener('click', event => {
 	socket.send(JSON.stringify({action: 'pass'}));
-	//Transition
-	board.canvas.removeEventListener('mousemove', boardMousemoveListener);
-	board.canvas.removeEventListener('mouseout', boardMouseoutListener);
-	board.canvas.removeEventListener('click', boardPlayClickListener);
-	playButtons.style.display = 'none';
+	suspend();
 });
 
 //Resign button
 playButtons.children[1].addEventListener('click', event => {
 	socket.send(JSON.stringify({action: 'resign'}));
-	//Transition
-	board.canvas.removeEventListener('mousemove', boardMousemoveListener);
-	board.canvas.removeEventListener('mouseout', boardMouseoutListener);
-	board.canvas.removeEventListener('click', boardPlayClickListener);
-	playButtons.style.display = 'none';
+	suspend();
 });
 
-/*
-	Frame format: {
-		board_size: 19,
-		handicap: 2,
-		board: [0, 1, 2, ...]
-		moves: [1, 0, 0, ...],
-		turn: "black"
-	}
-*/
-
 //WebSocket events
-//const socket = new WebSocket('localhost');
 socket.addEventListener('message', event => {
+	suspend();
 	const frame = JSON.parse(event.data);
-	//console.log(frame);
-	handicapCount = frame.handicap;
+	console.log(frame);
 	board.update(frame);
-	//Status text
+	blackTimer.update(frame.black_time);
+	whiteTimer.update(frame.white_time);
 	switch (frame.turn) {
+		case 'wait':
+			statusText.innerText = 'Waiting for players';
+			blackTimer.resume();
+			whiteTimer.resume();
+			break;
 		case 'handicap':
-			statusBar.textContent = 'Handicap'
+			statusText.innerText = 'Black to play handicap'
+			blackTimer.resume();
 			break;
 		case 'black':
-			statusBar.textContent = 'Black to move'
+			statusText.innerText = 'Black to play'
+			blackTimer.resume();
 			break;
 		case 'white':
-			statusBar.textContent = 'White to move'
+			statusText.innerText = 'White to play'
+			whiteTimer.resume();
 			break;
 		case 'end':
-			statusBar.textContent = 'Game over'
-			//TODO: Display score
+			statusText.innerText = 'Game over'
+			score.style.display = 'block';
+			blackScore.innerText = frame.black_score;
+			whiteScore.innerText = frame.white_score;
+			if (frame.black_score > frame.white_score)
+				scoreStatement.innerText = `Black wins by +${frame.black_score - frame.white_score}`;
+			else if (frame.white_score > frame.black_score)
+				scoreStatement.innerText = `White wins by +${frame.white_score - frame.black_score}`;
+			else scoreStatement.innerText = 'Draw';
 			break;
 	}
 	//Interactions
-	if (stone === 'black' && frame.turn === 'handicap') {
+	if (stone === 1 && frame.turn === 'handicap') {
 		//Handicap
-		board.canvas.addEventListener('mousemove', boardMousemoveListener);
-		board.canvas.addEventListener('mouseout', boardMouseoutListener);
-		board.canvas.addEventListener('click', boardHandicapClickListener);
-		handicapButtons.style.display = 'block';
-		handicapButtons.children[0].setAttribute('disabled', '');
-		handicapButtons.children[1].setAttribute('disabled', '');
-	} else if (stone === frame.turn) {
+		board.enabled = true;
+		board.clickListeners.add(handicapPlacement);
+	} else if (stoneName === frame.turn) {
 		//Play
-		board.canvas.addEventListener('mousemove', boardMousemoveListener);
-		board.canvas.addEventListener('mouseout', boardMouseoutListener);
-		board.canvas.addEventListener('click', boardPlayClickListener);
-		playButtons.style.display = 'block';
+		board.enabled = true;
+		board.clickListeners.add(playPlacement);
+		for (const button of playButtons.children)
+			button.removeAttribute('disabled');
 	}
 	board.draw();
 });
 socket.addEventListener('error', event => {
-	statusBar.textContent = 'Connection failed';
+	statusText.textContent = 'Connection lost';
 });
-
-//Message testing
-/*
-const test_frame = JSON.stringify({
-	board_size: 3,
-	handicap: 2,
-	board: [
-		0, 0, 0,
-		0, 2, 0,
-		0, 0, 0
-	],
-	moves: [
-		1, 1, 1,
-		1, 0, 0,
-		1, 0, 0
-	],
-	turn: 'black'
-});
-const test_event = new Event('message');
-test_event.data = test_frame;
-socket.dispatchEvent(test_event);
-*/
