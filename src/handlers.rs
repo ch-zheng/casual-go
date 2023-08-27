@@ -31,7 +31,8 @@ use std::{
 #[derive(Clone)]
 pub struct AppState {
     pub templates: Handlebars<'static>,
-    pub sessions: Arc<Mutex<session::Sessions>>
+    pub sessions: Arc<Mutex<session::Sessions>>,
+    pub engine: String
 }
 
 #[derive(Deserialize)]
@@ -76,7 +77,8 @@ pub async fn create_session(
                 game,
                 bots,
                 Duration::from_secs(form.fixed_time),
-                Duration::from_secs(form.added_time)
+                Duration::from_secs(form.added_time),
+                state.engine
             ));
             //Register session 
             sessions.insert(id, (sender, broadcast));

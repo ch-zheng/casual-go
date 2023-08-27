@@ -16,5 +16,5 @@ serde = {version = "1.0", features = ["derive"]}
 futures = "0.3"
 http = "0.2"
 rand = "0.8"
-handlebars = {version = "4.3", features = ["dir_source"]}
+handlebars = "4.3"
 serde_json = "1"

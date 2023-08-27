@@ -48,12 +48,13 @@ fn vertex_to_index(vertex: &str, board_size: u32) -> Option<u32> {
 }
 
 pub fn engine(
+    command: String,
     stone: Stone,
     board_size: u32,
     komi: u32,
     sender: mpsc::UnboundedSender<session::Message>
 ) -> mpsc::UnboundedSender<Message> {
-    let mut child = Command::new("gnugo")
+    let mut child = Command::new(&command)
         .args(["--mode", "gtp", "--level", "1", "--chinese-rules", "--allow-suicide"])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())

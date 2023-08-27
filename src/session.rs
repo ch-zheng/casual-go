@@ -103,7 +103,8 @@ pub async fn session(
     mut game: Game,
     bots: [bool; 2],
     fixed_time: Duration,
-    added_time: Duration
+    added_time: Duration,
+    engine_command: String
 ) {
     let mut players = bots;
     let session_timeout = Duration::from_secs(5 * 60);
@@ -121,7 +122,7 @@ pub async fn session(
     let mut engine = None;
     if bots[0] || bots[1] {
         let stone = if bots[0] {Stone::Black} else {Stone::White};
-        engine = Some(engine::engine(stone, game.board_size as u32, game.komi, sender.clone()));
+        engine = Some(engine::engine(engine_command, stone, game.board_size as u32, game.komi, sender.clone()));
     }
     //Listen for requests
     while let Some(message) = receiver.recv().await {

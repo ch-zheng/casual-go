@@ -20,15 +20,24 @@ async fn main() {
     } else {
         80
     };
+    let engine: String = if let Some(engine) = args.get(2) {
+        engine.into()
+    } else {
+        "gnugo".into()
+    };
     //Templates
     let mut templates = Handlebars::new();
-    if templates.register_templates_directory(".hbs", "templates").is_err() {
+    if templates.register_template_string("lobby", include_str!("../templates/lobby.hbs")).is_err() {
+        return
+    }
+    if templates.register_template_string("game", include_str!("../templates/game.hbs")).is_err() {
         return
     }
     //App
     let state = handlers::AppState {
         templates,
-        sessions: Arc::new(Mutex::new(HashMap::new()))
+        sessions: Arc::new(Mutex::new(HashMap::new())),
+        engine
     };
     let app = Router::new()
         .route("/", routing::get(|| async {
@@ -40,7 +49,7 @@ async fn main() {
         .route("/sse/:game", routing::get(handlers::spectate))
         .with_state(state);
     let socket = SocketAddr::new(
-        IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1)),
+        IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 0)),
         port
     );
     axum::Server::bind(&socket)
