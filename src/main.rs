@@ -3,7 +3,7 @@ use axum::{
     response,
     routing
 };
-use go::handlers;
+use casual_go::handlers;
 use handlebars::Handlebars;
 use std::{
     env,
@@ -18,7 +18,7 @@ async fn main() {
     let port: u16 = if let Some(port) = args.get(1) {
         port.parse().unwrap()
     } else {
-        8001
+        80
     };
     //Templates
     let mut templates = Handlebars::new();

@@ -43,7 +43,7 @@ const scoreStatement = document.getElementById('score-statement');
 score.style.display = 'none';
 
 //Data
-const socket = new WebSocket(`ws://${url.host}/ws/${id}/${stoneName}`);
+const socket = new WebSocket(`wss://${url.host}/ws/${id}/${stoneName}`);
 let handicaps = [];
 
 function suspend() {

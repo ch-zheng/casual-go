@@ -33,7 +33,7 @@ score.style.display = 'none';
 const eventSource = new EventSource(`/sse/${id}`);
 eventSource.addEventListener('message', event => {
 	const data = JSON.parse(event.data);
-	console.log(data);
+	//console.log(data);
 	//Board
 	board.update(data);
 	board.draw();
