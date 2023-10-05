@@ -118,7 +118,7 @@ playButtons.children[1].addEventListener('click', event => {
 socket.addEventListener('message', event => {
 	suspend();
 	const frame = JSON.parse(event.data);
-	console.log(frame);
+	//console.log(frame);
 	board.update(frame);
 	blackTimer.update(frame.black_time);
 	whiteTimer.update(frame.white_time);

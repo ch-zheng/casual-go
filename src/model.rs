@@ -215,6 +215,29 @@ impl Game {
             Err(GameError::Handicap)
         }
     }
+    fn next_moves(&self, stone: Stone) -> Result<Vec<bool>, GameError> {
+        if stone == Stone::Black || stone == Stone::White {
+            let mut moves = vec![true; self.board.len()];
+            for pos in 0..self.board.len() {
+                if self.board[pos] == Stone::Empty {
+                    let mut board = self.board.clone();
+                    let captures = place_stone(self.board_size, &mut board, stone, pos);
+                    if captures > 0 {
+                        for entry in &self.history {
+                            if board == *entry {
+                                moves[pos] = false;
+                            }
+                        }
+                    }
+                } else {
+                    moves[pos] = false;
+                }
+            }
+            Ok(moves)
+        } else {
+            Err(GameError::Play)
+        }
+    }
     pub fn play(&mut self, stone: Stone, pos: usize) -> Result<(), GameError> {
         //Conditions
         if pos < self.board.len()
@@ -238,22 +261,7 @@ impl Game {
                 Stone::White => Stone::Black,
                 _ => return Err(GameError::Play)
             };
-            for pos in 0..self.board.len() {
-                if self.board[pos] == Stone::Empty {
-                    let mut board = self.board.clone();
-                    let captures = place_stone(self.board_size, &mut board, next_stone, pos);
-                    self.valid_moves[pos] = true;
-                    if captures > 0 {
-                        for entry in &self.history {
-                            if board == *entry {
-                                self.valid_moves[pos] = false;
-                            }
-                        }
-                    }
-                } else {
-                    self.valid_moves[pos] = false;
-                }
-            }
+            self.valid_moves = self.next_moves(next_stone).unwrap();
             //Scoring
             [self.black_score, self.white_score] = self.score();
             Ok(())
@@ -261,16 +269,22 @@ impl Game {
             Err(GameError::Play)
         }
     }
-    pub fn pass(&mut self, side: Stone) -> Result<(), GameError> {
-        if (side == Stone::Black && self.turn == Turn::Black)
-            || (side == Stone::White && self.turn == Turn::White) {
+    pub fn pass(&mut self, stone: Stone) -> Result<(), GameError> {
+        if (stone == Stone::Black && self.turn == Turn::Black)
+            || (stone == Stone::White && self.turn == Turn::White) {
             self.passes += 1;
             if self.passes == 2 {
                 self.turn = Turn::End;
             } else {
-                match side {
-                    Stone::Black => self.turn = Turn::White,
-                    Stone::White => self.turn = Turn::Black,
+                match stone {
+                    Stone::Black => {
+                        self.valid_moves = self.next_moves(Stone::White).unwrap();
+                        self.turn = Turn::White;
+                    },
+                    Stone::White => {
+                        self.valid_moves = self.next_moves(Stone::Black).unwrap();
+                        self.turn = Turn::Black;
+                    },
                     _ => ()
                 }
             }
@@ -357,9 +371,6 @@ mod tests {
         let expected: [usize; 4] = [0, 1, 3, 4];
         let mut group = connected_group(3, &board, 0);
         group.sort();
-        for item in &group {
-            println!("GROUP {}", item);
-        }
         assert!(group == expected);
     }
     #[test]

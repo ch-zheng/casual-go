@@ -70,15 +70,16 @@ pub fn engine(
             let parts: Vec<&str> = line.split(' ').collect();
             if parts.len() == 2 {
                 //= [vertex/pass/resign]
-                match parts[1] {
-                    "pass" => if sender.send(session::Message::Pass(stone)).is_err() {
+                let part = parts[1].to_uppercase();
+                match part.as_str() {
+                    "PASS" => if sender.send(session::Message::Pass(stone)).is_err() {
                         break
                     },
-                    "resign" => if sender.send(session::Message::Resign(stone)).is_err() {
+                    "RESIGN" => if sender.send(session::Message::Resign(stone)).is_err() {
                         break
                     },
                     _ => {
-                        let message = if let Some(index) = vertex_to_index(parts[1], board_size) {
+                        let message = if let Some(index) = vertex_to_index(&part, board_size) {
                             session::Message::Play(stone, index as usize)
                         } else {
                             session::Message::Resign(stone)
